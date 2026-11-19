@@ -1,0 +1,75 @@
+================================================================================
+SOAL 2 - QUERY PERHITUNGAN TASKLIST ONTIME DAN LATE BESERTA PERSENTASENYA (MySQL)
+Database : db_test_programmer_trusmi
+================================================================================
+
+1. ATURAN PERHITUNGAN
+--------------------------------------------------------------------------------
+- Task dianggap On-Time apabila : aktual <= deadline
+- Task dianggap Late apabila    : aktual > deadline
+- Persentase On-Time (%)        : (total_ontime / total_task) * 100
+- Persentase Late (%)           : (total_late / total_task) * 100
+
+================================================================================
+2. QUERY SQL (VERSI TABEL HASIL NORMALISASI - SUDAH DIUJI DI MYSQL)
+================================================================================
+
+SELECT
+    COUNT(*) AS total_task,
+
+    SUM(
+        CASE WHEN aktual <= deadline
+            THEN 1 ELSE 0 END
+    ) AS total_ontime,
+
+    SUM(
+        CASE WHEN aktual > deadline
+            THEN 1 ELSE 0 END
+    ) AS total_late,
+
+    ROUND(
+        SUM(CASE WHEN aktual <= deadline
+            THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(*), 0), 2
+    ) AS persentase_ontime,
+
+    ROUND(
+        SUM(CASE WHEN aktual > deadline
+            THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(*), 0), 2
+    ) AS persentase_late
+
+FROM trx_kpi_marketing
+WHERE aktual IS NOT NULL
+  AND deadline IS NOT NULL;
+
+================================================================================
+3. HASIL EKSEKUSI QUERY DI MYSQL
+================================================================================
+
++------------+--------------+------------+-------------------+-----------------+
+| total_task | total_ontime | total_late | persentase_ontime | persentase_late |
++------------+--------------+------------+-------------------+-----------------+
+|         13 |            8 |          5 |             61.54 |           38.46 |
++------------+--------------+------------+-------------------+-----------------+
+1 row in set (0.00 sec)
+
+================================================================================
+4. ALTERNATIF QUERY LANGSUNG DARI TABEL ORIGINAL (table_kpi_marketing)
+================================================================================
+
+SELECT
+    COUNT(*) AS total_task,
+    SUM(CASE WHEN aktual <= deadline THEN 1 ELSE 0 END) AS total_ontime,
+    SUM(CASE WHEN aktual > deadline THEN 1 ELSE 0 END) AS total_late,
+    ROUND(
+        SUM(CASE WHEN aktual <= deadline THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(*), 0), 2
+    ) AS persentase_ontime,
+    ROUND(
+        SUM(CASE WHEN aktual > deadline THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(*), 0), 2
+    ) AS persentase_late
+FROM table_kpi_marketing
+WHERE aktual IS NOT NULL
+  AND deadline IS NOT NULL;

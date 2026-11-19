@@ -1,0 +1,47 @@
+name: trusmi-core-dev
+
+services:
+  backend:
+    container_name: trusmi-dev-backend
+    build:
+      context: ../..
+      dockerfile: docker/dev/backend.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../trusmi_be/.env
+    environment:
+      APP_PORT: "8090"
+      DB_HOST: ${DOCKER_DB_HOST:-host.docker.internal}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8090:8090"
+    networks:
+      - trusmi_dev_net
+
+  frontend:
+    container_name: trusmi-dev-frontend
+    build:
+      context: ../..
+      dockerfile: docker/dev/frontend.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../trusmi_fe/.env
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ../../trusmi_fe/src:/app/src
+      - ../../trusmi_fe/public:/app/public
+      - ../../trusmi_fe/index.html:/app/index.html
+      - ../../trusmi_fe/vite.config.js:/app/vite.config.js
+    ports:
+      - "${FE_DEV_PORT:-5175}:5173"
+    depends_on:
+      - backend
+    networks:
+      - trusmi_dev_net
+
+networks:
+  trusmi_dev_net:
+    driver: bridge

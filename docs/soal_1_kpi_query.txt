@@ -1,0 +1,162 @@
+================================================================================
+SOAL 1 - QUERY PERHITUNGAN KPI MARKETING PER KARYAWAN (MySQL)
+Database : db_test_programmer_trusmi
+================================================================================
+
+1. ATURAN PERHITUNGAN (BUSINESS RULES & ASUMSI)
+--------------------------------------------------------------------------------
+- Kategori KPI Marketing : Sales dan Report
+- Target KPI             : Sales = 2, Report = 2
+- Bobot KPI              : Sales = 50% (50.00), Report = 50% (50.00)
+- Bobot Penalti Late     : Sales = -7% (-7.00) per task late
+                           Report = -5% (-5.00) per task late
+- Kriteria On-Time       : aktual <= deadline
+- Kriteria Late          : aktual > deadline
+- Rumus Pencapaian (%)   : (Actual / Target) * 100
+- Rumus Bobot Actual (%) : (Actual / Target) * Bobot KPI
+- Rumus Late (%)         : Jumlah Task Late * Bobot Penalti Late
+- Rumus Total Bobot (%)  : Bobot Actual + Late
+- Rumus Total KPI (%)    : Total Bobot Sales + Total Bobot Report
+
+================================================================================
+2. QUERY SQL (VERSI TABEL HASIL NORMALISASI - SUDAH DIUJI DI MYSQL)
+================================================================================
+
+WITH rekap AS (
+    SELECT
+        k.id AS karyawan_id,
+        k.nama_karyawan,
+        kp.nama_kpi,
+        kp.target_kpi,
+        COUNT(t.aktual) AS actual,
+
+        ROUND(
+            COUNT(t.aktual) * 100.0 /
+            NULLIF(kp.target_kpi, 0), 2
+        ) AS pencapaian,
+
+        ROUND(
+            COUNT(t.aktual) * kp.bobot_kpi /
+            NULLIF(kp.target_kpi, 0), 2
+        ) AS bobot_actual,
+
+        SUM(
+            CASE WHEN t.aktual > t.deadline
+                THEN 1 ELSE 0 END
+        ) * kp.bobot_late AS late
+
+    FROM mst_karyawan k
+    CROSS JOIN mst_kpi kp
+    LEFT JOIN trx_kpi_marketing t
+        ON t.karyawan_id = k.id
+        AND t.kpi_id = kp.id
+
+    GROUP BY
+        k.id, k.nama_karyawan,
+        kp.id, kp.nama_kpi,
+        kp.target_kpi, kp.bobot_kpi, kp.bobot_late
+)
+
+SELECT
+    nama_karyawan AS Nama,
+
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN target_kpi END) AS sales_target,
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN actual END) AS sales_actual,
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN pencapaian END) AS sales_pencapaian,
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN bobot_actual END) AS bobot_sales,
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN late END) AS late_sales,
+    MAX(CASE WHEN nama_kpi = 'Sales'
+        THEN bobot_actual + late END) AS total_bobot_sales,
+
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN target_kpi END) AS report_target,
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN actual END) AS report_actual,
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN pencapaian END) AS report_pencapaian,
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN bobot_actual END) AS bobot_report,
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN late END) AS late_report,
+    MAX(CASE WHEN nama_kpi = 'Report'
+        THEN bobot_actual + late END) AS total_bobot_report,
+
+    ROUND(SUM(bobot_actual + late), 2) AS KPI
+
+FROM rekap
+GROUP BY karyawan_id, nama_karyawan
+ORDER BY karyawan_id;
+
+================================================================================
+3. HASIL EKSEKUSI QUERY DI MYSQL
+================================================================================
+
++------+--------------+--------------+------------------+-------------+------------+-------------------+---------------+---------------+-------------------+--------------+-------------+--------------------+-------+
+| Nama | sales_target | sales_actual | sales_pencapaian | bobot_sales | late_sales | total_bobot_sales | report_target | report_actual | report_pencapaian | bobot_report | late_report | total_bobot_report | KPI   |
++------+--------------+--------------+------------------+-------------+------------+-------------------+---------------+---------------+-------------------+--------------+-------------+--------------------+-------+
+| Budi |            2 |            2 |           100.00 |       50.00 |       0.00 |             50.00 |             2 |             2 |            100.00 |        50.00 |       -5.00 |              45.00 | 95.00 |
+| Adi  |            2 |            2 |           100.00 |       50.00 |      -7.00 |             43.00 |             2 |             2 |            100.00 |        50.00 |        0.00 |              50.00 | 93.00 |
+| Rara |            2 |            2 |           100.00 |       50.00 |      -7.00 |             43.00 |             2 |             1 |             50.00 |        25.00 |       -5.00 |              20.00 | 63.00 |
+| Doni |            2 |            1 |            50.00 |       25.00 |      -7.00 |             18.00 |             2 |             1 |             50.00 |        25.00 |        0.00 |              25.00 | 43.00 |
++------+--------------+--------------+------------------+-------------+------------+-------------------+---------------+---------------+-------------------+--------------+-------------+--------------------+-------+
+4 rows in set (0.01 sec)
+
+================================================================================
+4. ALTERNATIF QUERY LANGSUNG DARI TABEL ORIGINAL (table_kpi_marketing)
+   (Jika diuji langsung terhadap tabel sebelum normalisasi)
+================================================================================
+
+WITH kpi_config AS (
+    SELECT 'Sales' AS nama_kpi, 2 AS target_kpi, 50.00 AS bobot_kpi, -7.00 AS bobot_late
+    UNION ALL
+    SELECT 'Report' AS nama_kpi, 2 AS target_kpi, 50.00 AS bobot_kpi, -5.00 AS bobot_late
+),
+daftar_karyawan AS (
+    SELECT
+        karyawan AS nama_karyawan,
+        MIN(id) AS urutan_id
+    FROM table_kpi_marketing
+    GROUP BY karyawan
+),
+rekap AS (
+    SELECT
+        k.urutan_id,
+        k.nama_karyawan,
+        kp.nama_kpi,
+        kp.target_kpi,
+        COUNT(t.aktual) AS actual,
+        ROUND(COUNT(t.aktual) * 100.0 / NULLIF(kp.target_kpi, 0), 2) AS pencapaian,
+        ROUND(COUNT(t.aktual) * kp.bobot_kpi / NULLIF(kp.target_kpi, 0), 2) AS bobot_actual,
+        SUM(CASE WHEN t.aktual > t.deadline THEN 1 ELSE 0 END) * kp.bobot_late AS late
+    FROM daftar_karyawan k
+    CROSS JOIN kpi_config kp
+    LEFT JOIN table_kpi_marketing t
+        ON t.karyawan = k.nama_karyawan
+        AND t.kpi = kp.nama_kpi
+    GROUP BY
+        k.urutan_id, k.nama_karyawan,
+        kp.nama_kpi, kp.target_kpi, kp.bobot_kpi, kp.bobot_late
+)
+SELECT
+    nama_karyawan AS Nama,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN target_kpi END) AS sales_target,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN actual END) AS sales_actual,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN pencapaian END) AS sales_pencapaian,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN bobot_actual END) AS bobot_sales,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN late END) AS late_sales,
+    MAX(CASE WHEN nama_kpi = 'Sales' THEN bobot_actual + late END) AS total_bobot_sales,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN target_kpi END) AS report_target,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN actual END) AS report_actual,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN pencapaian END) AS report_pencapaian,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN bobot_actual END) AS bobot_report,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN late END) AS late_report,
+    MAX(CASE WHEN nama_kpi = 'Report' THEN bobot_actual + late END) AS total_bobot_report,
+    ROUND(SUM(bobot_actual + late), 2) AS KPI
+FROM rekap
+GROUP BY urutan_id, nama_karyawan
+ORDER BY urutan_id;

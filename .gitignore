@@ -1,0 +1,19 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+!.env.prod.example
+trusmi_be/.env
+trusmi_be/.env.prod
+trusmi_fe/.env
+trusmi_fe/.env.prod
+
+# Build artifacts & dependencies
+trusmi_be/bin/
+trusmi_fe/node_modules/
+trusmi_fe/dist/
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db

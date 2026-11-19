@@ -1,0 +1,188 @@
+================================================================================
+SOAL 5 - PROSES NORMALISASI TABEL table_kpi_marketing (MySQL)
+Database : db_test_programmer_trusmi
+================================================================================
+
+1. ANALISIS TABEL AWAL (table_kpi_marketing)
+--------------------------------------------------------------------------------
+Struktur tabel original sebelum normalisasi:
+
+mysql> DESCRIBE table_kpi_marketing;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| id       | int          | NO   | PRI | NULL    |       |
+| tasklist | varchar(100) | YES  |     | NULL    |       |
+| kpi      | varchar(100) | YES  |     | NULL    |       |
+| karyawan | varchar(100) | YES  |     | NULL    |       |
+| deadline | date         | YES  |     | NULL    |       |
+| aktual   | date         | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+
+Permasalahan pada struktur awal (Unnormalized / 1NF):
+1. Redundansi Data Master Karyawan:
+   Nama karyawan ('Budi', 'Adi', 'Rara', 'Doni') disimpan berulang-ulang sebagai
+   string di setiap baris transaksi tasklist. Jika ada perubahan nama karyawan,
+   berisiko terjadi update anomaly.
+2. Redundansi Data Master KPI & Atribut Rule KPI:
+   Nama KPI ('Sales', 'Report') disimpan berulang sebagai teks, dan parameter
+   aturan KPI (target_kpi, bobot_kpi, bobot_late) tidak memiliki tempat
+   penyimpanan terstruktur pada level master.
+3. Tidak adanya Referential Integrity (Foreign Key):
+   Tidak ada batasan (constraint) yang menjamin konsistensi penulisan nama
+   karyawan maupun jenis KPI pada tabel transaksi.
+
+Solusi Normalisasi (hingga 3NF):
+Memecah tabel menjadi 3 tabel yang saling berelasi:
+1. mst_karyawan      : Menyimpan data master karyawan (id, nama_karyawan)
+2. mst_kpi           : Menyimpan data master KPI beserta target, bobot, dan
+                       bobot penalti late (id, nama_kpi, target_kpi, bobot_kpi, bobot_late)
+3. trx_kpi_marketing : Menyimpan data transaksi tasklist yang berelasi ke
+                       mst_karyawan (karyawan_id) dan mst_kpi (kpi_id)
+
+================================================================================
+2. DAFTAR TABEL DI DATABASE (SHOW TABLES & DESCRIBE)
+================================================================================
+
+mysql> SHOW TABLES;
++-------------------------------------+
+| Tables_in_db_test_programmer_trusmi |
++-------------------------------------+
+| mst_karyawan                        |
+| mst_kpi                             |
+| table_kpi_marketing                 |
+| trx_kpi_marketing                   |
++-------------------------------------+
+
+mysql> DESCRIBE mst_karyawan;
++---------------+--------------+------+-----+---------+----------------+
+| Field         | Type         | Null | Key | Default | Extra          |
++---------------+--------------+------+-----+---------+----------------+
+| id            | int          | NO   | PRI | NULL    | auto_increment |
+| nama_karyawan | varchar(100) | NO   |     | NULL    |                |
++---------------+--------------+------+-----+---------+----------------+
+
+mysql> DESCRIBE mst_kpi;
++------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int          | NO   | PRI | NULL    | auto_increment |
+| nama_kpi   | varchar(100) | NO   |     | NULL    |                |
+| target_kpi | int          | NO   |     | NULL    |                |
+| bobot_kpi  | decimal(5,2) | NO   |     | NULL    |                |
+| bobot_late | decimal(5,2) | NO   |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+
+mysql> DESCRIBE trx_kpi_marketing;
++-------------+--------------+------+-----+---------+----------------+
+| Field       | Type         | Null | Key | Default | Extra          |
++-------------+--------------+------+-----+---------+----------------+
+| id          | int          | NO   | PRI | NULL    | auto_increment |
+| tasklist    | varchar(100) | YES  |     | NULL    |                |
+| karyawan_id | int          | NO   | MUL | NULL    |                |
+| kpi_id      | int          | NO   | MUL | NULL    |                |
+| deadline    | date         | YES  |     | NULL    |                |
+| aktual      | date         | YES  |     | NULL    |                |
++-------------+--------------+------+-----+---------+----------------+
+
+================================================================================
+3. DDL STRUKTUR TABEL HASIL NORMALISASI (SHOW CREATE TABLE)
+================================================================================
+
+-- 3.1 Tabel Master Karyawan (mst_karyawan)
+CREATE TABLE `mst_karyawan` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nama_karyawan` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+
+-- 3.2 Tabel Master KPI (mst_kpi)
+CREATE TABLE `mst_kpi` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nama_kpi` varchar(100) NOT NULL,
+  `target_kpi` int NOT NULL,
+  `bobot_kpi` decimal(5,2) NOT NULL,
+  `bobot_late` decimal(5,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+
+-- 3.3 Tabel Transaksi KPI Marketing (trx_kpi_marketing)
+CREATE TABLE `trx_kpi_marketing` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `tasklist` varchar(100) DEFAULT NULL,
+  `karyawan_id` int NOT NULL,
+  `kpi_id` int NOT NULL,
+  `deadline` date DEFAULT NULL,
+  `aktual` date DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_trx_karyawan` (`karyawan_id`),
+  KEY `fk_trx_kpi` (`kpi_id`),
+  CONSTRAINT `fk_trx_karyawan` FOREIGN KEY (`karyawan_id`) REFERENCES `mst_karyawan` (`id`),
+  CONSTRAINT `fk_trx_kpi` FOREIGN KEY (`kpi_id`) REFERENCES `mst_kpi` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+
+================================================================================
+4. DML PENGISIAN / MIGRASI DATA KE TABEL NORMALISASI
+================================================================================
+
+-- Mengisi Master Karyawan
+INSERT INTO mst_karyawan (id, nama_karyawan) VALUES
+(1, 'Budi'),
+(2, 'Adi'),
+(3, 'Rara'),
+(4, 'Doni');
+
+-- Mengisi Master KPI beserta Target, Bobot, dan Penalti Late
+INSERT INTO mst_kpi (id, nama_kpi, target_kpi, bobot_kpi, bobot_late) VALUES
+(1, 'Sales', 2, 50.00, -7.00),
+(2, 'Report', 2, 50.00, -5.00);
+
+-- Migrasi Data Transaksi dari table_kpi_marketing ke trx_kpi_marketing
+INSERT INTO trx_kpi_marketing (tasklist, karyawan_id, kpi_id, deadline, aktual)
+SELECT
+    t.tasklist,
+    k.id AS karyawan_id,
+    kp.id AS kpi_id,
+    t.deadline,
+    t.aktual
+FROM table_kpi_marketing t
+JOIN mst_karyawan k ON t.karyawan = k.nama_karyawan
+JOIN mst_kpi kp ON t.kpi = kp.nama_kpi;
+
+================================================================================
+5. QUERY DAN HASIL RELASI TABEL NORMALISASI (SUDAH DIUJI DI MYSQL)
+================================================================================
+
+SELECT
+    t.id,
+    t.tasklist,
+    kp.nama_kpi AS kpi,
+    k.nama_karyawan AS karyawan,
+    t.deadline,
+    t.aktual
+FROM trx_kpi_marketing t
+JOIN mst_karyawan k
+    ON t.karyawan_id = k.id
+JOIN mst_kpi kp
+    ON t.kpi_id = kp.id
+ORDER BY t.tasklist;
+
+Hasil Output:
++----+-------------+--------+----------+------------+------------+
+| id | tasklist    | kpi    | karyawan | deadline   | aktual     |
++----+-------------+--------+----------+------------+------------+
+|  4 | Tasklist 1  | Sales  | Budi     | 2022-01-10 | 2022-01-09 |
+| 10 | Tasklist 10 | Sales  | Rara     | 2022-01-10 | 2022-01-09 |
+|  9 | Tasklist 11 | Report | Rara     | 2022-01-10 | 2022-01-12 |
+| 13 | Tasklist 12 | Report | Doni     | 2022-01-10 | 2022-01-09 |
+| 12 | Tasklist 13 | Sales  | Doni     | 2022-01-10 | 2022-01-12 |
+|  3 | Tasklist 2  | Sales  | Budi     | 2022-01-10 | 2022-01-08 |
+|  2 | Tasklist 3  | Report | Budi     | 2022-01-10 | 2022-01-07 |
+|  1 | Tasklist 4  | Report | Budi     | 2022-01-10 | 2022-01-12 |
+|  8 | Tasklist 5  | Sales  | Adi      | 2022-01-10 | 2022-01-09 |
+|  7 | Tasklist 6  | Sales  | Adi      | 2022-01-10 | 2022-01-12 |
+|  6 | Tasklist 7  | Report | Adi      | 2022-01-10 | 2022-01-07 |
+|  5 | Tasklist 8  | Report | Adi      | 2022-01-10 | 2022-01-07 |
+| 11 | Tasklist 9  | Sales  | Rara     | 2022-01-10 | 2022-01-12 |
++----+-------------+--------+----------+------------+------------+
+13 rows in set (0.00 sec)

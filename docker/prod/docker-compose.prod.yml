@@ -1,0 +1,43 @@
+name: trusmi-core-prod
+
+services:
+  backend:
+    container_name: trusmi-prod-backend
+    build:
+      context: ../..
+      dockerfile: docker/prod/backend.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../trusmi_be/.env.prod
+    environment:
+      APP_ENV: production
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8090"
+      DB_HOST: mysql-global
+      DB_PORT: "3306"
+    ports:
+      - "127.0.0.1:${TRUSMI_API_HOST_PORT:-18082}:8090"
+    networks:
+      - trusmi_prod_net
+      - mysql_shared
+
+  frontend:
+    container_name: trusmi-prod-frontend
+    build:
+      context: ../..
+      dockerfile: docker/prod/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${TRUSMI_FE_HOST_PORT:-18081}:80"
+    depends_on:
+      - backend
+    networks:
+      - trusmi_prod_net
+
+networks:
+  trusmi_prod_net:
+    driver: bridge
+  mysql_shared:
+    external: true
