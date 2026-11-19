@@ -1,6 +1,6 @@
-# Dokumentasi Pengujian Query SQL — Technical Test Programmer TRUSMI GROUP
+# Dokumentasi Pengerjaan Technical Test Programmer — TRUSMI GROUP
 
-Dokumen ini memuat dokumentasi query SQL beserta hasil pengujian di MySQL (`db_test_programmer_trusmi`) untuk **Soal Nomor 1, 2, dan 5**.
+Dokumen ini memuat hasil pengerjaan **Soal 1 sampai Soal 5** menggunakan database MySQL (`db_test_programmer_trusmi`), Backend Golang (GoFiber), dan Frontend React + Vite.
 
 ---
 
@@ -144,6 +144,22 @@ WHERE aktual IS NOT NULL
 
 ---
 
+## Soal 3 — Tampilan Dashboard Grafik dari Hasil Soal Nomor 1 (`Dashboard 1`)
+
+Tampilan dashboard grafik untuk hasil perhitungan KPI Marketing per karyawan (perbandingan bobot Sales vs Report, grafik Total KPI per karyawan, serta tabel rekapitulasi KPI):
+
+![Dashboard 1 - Grafik KPI Marketing](../dashboard%201.png)
+
+---
+
+## Soal 4 — Tampilan Dashboard Grafik dari Hasil Soal Nomor 2 (`Dashboard 2`)
+
+Tampilan dashboard grafik untuk hasil perhitungan jumlah dan persentase tasklist Ontime vs Late beserta rincian data tasklist:
+
+![Dashboard 2 - Grafik Ontime vs Late](../dashboard%202.png)
+
+---
+
 ## Soal 5 — Normalisasi Struktur `table_kpi_marketing`
 
 ### 1. Daftar Tabel di Database
@@ -166,7 +182,7 @@ SHOW TABLES;
 
 ### 2. Deskripsi Struktur Tabel (`DESCRIBE`)
 
-#### `table_kpi_marketing` (Tabel Original Sebelum Normalisasi)
+#### `table_kpi_marketing` (Tabel Awal Sebelum Normalisasi)
 ```text
 +----------+--------------+------+-----+---------+-------+
 | Field    | Type         | Null | Key | Default | Extra |

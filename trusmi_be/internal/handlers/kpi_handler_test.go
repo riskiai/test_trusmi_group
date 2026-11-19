@@ -138,19 +138,8 @@ func setupTestApp() *fiber.App {
 func TestEndpoints(t *testing.T) {
 	app := setupTestApp()
 
-	t.Run("GET /api/v1/health", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/health", nil)
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("app.Test failed: %v", err)
-		}
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("status = %d; want %d", resp.StatusCode, http.StatusOK)
-		}
-	})
-
-	t.Run("GET /api/v1/kpi/summary", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/kpi/summary", nil)
+	t.Run("GET /api/v1/dashboard-1", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/dashboard-1", nil)
 		resp, err := app.Test(req)
 		if err != nil {
 			t.Fatalf("app.Test failed: %v", err)
@@ -171,8 +160,8 @@ func TestEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("GET /api/v1/kpi/ontime-late", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/kpi/ontime-late", nil)
+	t.Run("GET /api/v1/dashboard-2", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/dashboard-2", nil)
 		resp, err := app.Test(req)
 		if err != nil {
 			t.Fatalf("app.Test failed: %v", err)
@@ -187,17 +176,6 @@ func TestEndpoints(t *testing.T) {
 		}
 		if body.Data.TotalTask != 13 || body.Data.TotalOntime != 8 || body.Data.TotalLate != 5 {
 			t.Errorf("unexpected ontime/late data: %+v", body.Data)
-		}
-	})
-
-	t.Run("GET /api/v1/kpi/tasks", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/kpi/tasks", nil)
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("app.Test failed: %v", err)
-		}
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("status = %d; want %d", resp.StatusCode, http.StatusOK)
 		}
 	})
 }

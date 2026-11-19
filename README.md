@@ -1,46 +1,49 @@
 # Technical Test Programmer — TRUSMI GROUP
 
-Repository ini berisi solusi lengkap **Technical Test Programmer TRUSMI GROUP** yang mencakup Query SQL & Normalisasi Database (MySQL), REST API Backend (Golang + GoFiber v3), Frontend Dashboard (React + Vite), serta konfigurasi Docker Development & Production.
+Repository ini berisi hasil pengerjaan **Technical Test Programmer TRUSMI GROUP** (Soal 1 sampai Soal 5) menggunakan **MySQL**, **Golang (GoFiber)**, dan **React + Vite**.
 
-## Struktur Project
+---
+
+## Daftar File Jawaban & Dokumentasi
+
+1. **Soal 1 (File `.txt`)**: [docs/soal_1_kpi_query.txt](docs/soal_1_kpi_query.txt)
+2. **Soal 2 (File `.txt`)**: [docs/soal_2_ontime_late_query.txt](docs/soal_2_ontime_late_query.txt)
+3. **Soal 5 (File `.txt`)**: [docs/soal_5_normalisasi.txt](docs/soal_5_normalisasi.txt)
+4. **Dokumentasi Lengkap Soal 1–5 (`.md`)**: [docs/DOKUMENTASI_SQL_SOAL_1_2_5.md](docs/DOKUMENTASI_SQL_SOAL_1_2_5.md)
+5. **Dokumentasi Endpoint API (`.md`)**: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)
+6. **Lampiran Prompt AI (`.md`)**: [docs/TRUSMI_GROUP_AI_AGENT_PROMPT.md](docs/TRUSMI_GROUP_AI_AGENT_PROMPT.md)
+
+---
+
+## Soal 3 — Tampilan Dashboard Grafik Hasil Soal Nomor 1 (`Dashboard 1`)
+
+![Dashboard 1](./dashboard%201.png)
+
+---
+
+## Soal 4 — Tampilan Dashboard Grafik Hasil Soal Nomor 2 (`Dashboard 2`)
+
+![Dashboard 2](./dashboard%202.png)
+
+---
+
+## Struktur Folder Project
 
 ```text
 TRUSMI_GROUP/
 ├── docker/
-│   ├── dev/
-│   │   ├── backend.Dockerfile
-│   │   ├── frontend.Dockerfile
-│   │   └── docker-compose.dev.yml
-│   └── prod/
-│       ├── backend.Dockerfile
-│       ├── frontend.Dockerfile
-│       ├── docker-compose.prod.yml
-│       └── nginx.conf
+│   ├── dev/                        # Konfigurasi Docker Development Lokal
+│   └── prod/                       # Konfigurasi Docker Production VPS
 ├── docs/
 │   ├── soal_1_kpi_query.txt
 │   ├── soal_2_ontime_late_query.txt
 │   ├── soal_5_normalisasi.txt
-│   ├── jawaban_soal_1_2_5.txt
-│   ├── database_schema.sql
 │   ├── DOKUMENTASI_SQL_SOAL_1_2_5.md
 │   ├── API_DOCUMENTATION.md
-│   └── DOCKER_DEPLOYMENT.md
-├── trusmi_be/                      # Backend Golang + GoFiber v3
-└── trusmi_fe/                      # Frontend React + Vite
+│   └── TRUSMI_GROUP_AI_AGENT_PROMPT.md
+├── trusmi_be/                      # Backend REST API (Golang + GoFiber)
+├── trusmi_fe/                      # Frontend Dashboard (React + Vite)
+├── dashboard 1.png                 # Screenshot Soal 3 (Dashboard 1)
+├── dashboard 2.png                 # Screenshot Soal 4 (Dashboard 2)
+└── README.md
 ```
-
-## Endpoint REST API (`trusmi_be`)
-
-- `GET /api/v1/health` — Pemeriksaan status service dan koneksi database MySQL.
-- `GET /api/v1/dashboard-1` (atau `GET /api/v1/kpi/summary`) — Hasil perhitungan KPI Sales & Report per karyawan (Soal 1 & Soal 3).
-- `GET /api/v1/dashboard-2` (atau `GET /api/v1/kpi/ontime-late`) — Hasil perhitungan jumlah & persentase tasklist On-Time dan Late (Soal 2 & Soal 4).
-- `GET /api/v1/kpi/tasks` — Daftar detail 13 tasklist hasil relasi tabel normalisasi (Soal 5).
-
-## Cara Menjalankan dengan Docker
-
-- **Development (Lokal):**
-  ```bash
-  docker compose -f docker/dev/docker-compose.dev.yml up -d --build
-  ```
-- **Production (VPS):**
-  Lihat panduan lengkap di [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md).

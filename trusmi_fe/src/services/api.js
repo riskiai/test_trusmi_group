@@ -1,9 +1,3 @@
-/**
- * Menormalisasi VITE_API_BASE_URL agar:
- * - Di Development (VITE_API_BASE_URL=http://localhost:8090) -> http://localhost:8090/api/v1
- * - Di Production (VITE_API_BASE_URL=/api/v1 atau "")        -> /api/v1 (relative URL pada domain yang sama)
- * - Tidak pernah terjadi duplikasi prefix /api/v1/api/v1
- */
 export function getApiBaseUrl() {
   const raw = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
   if (!raw) {
@@ -24,7 +18,6 @@ export function buildApiUrl(path = '') {
   if (!cleanPath.startsWith('/')) {
     cleanPath = `/${cleanPath}`;
   }
-  // Cegah duplikasi jika caller tidak sengaja mengirim /api/v1/...
   if (cleanPath.startsWith('/api/v1/')) {
     cleanPath = cleanPath.slice('/api/v1'.length);
   } else if (cleanPath === '/api/v1') {
@@ -50,16 +43,6 @@ async function requestJson(path) {
 }
 
 export const kpiApi = {
-  getHealth: () => requestJson('/health'),
-  getSummary: (karyawan = '') =>
-    requestJson(karyawan ? `/kpi/summary?karyawan=${encodeURIComponent(karyawan)}` : '/kpi/summary'),
-  getOntimeLate: () => requestJson('/kpi/ontime-late'),
-  getTasks: ({ karyawan = '', kpi = '', status = '' } = {}) => {
-    const params = new URLSearchParams();
-    if (karyawan) params.set('karyawan', karyawan);
-    if (kpi) params.set('kpi', kpi);
-    if (status) params.set('status', status);
-    const qs = params.toString();
-    return requestJson(qs ? `/kpi/tasks?${qs}` : '/kpi/tasks');
-  },
+  getDashboard1: () => requestJson('/dashboard-1'),
+  getDashboard2: () => requestJson('/dashboard-2'),
 };

@@ -19,14 +19,7 @@ func NewKPIService(repo repositories.KPIRepository) *KPIService {
 	return &KPIService{repo: repo}
 }
 
-// CheckHealth memeriksa koneksi database dengan timeout 3 detik.
-func (s *KPIService) CheckHealth(ctx context.Context) error {
-	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-	return s.repo.Ping(pingCtx)
-}
-
-// GetKPISummary mengambil rekap KPI per karyawan dan menghitung metadata ringkasan.
+// GetKPISummary mengambil rekap KPI per karyawan untuk Dashboard 1 (Soal 1 & 3).
 func (s *KPIService) GetKPISummary(ctx context.Context, karyawanFilter string) (models.KPISummaryResponse, error) {
 	qCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -48,7 +41,7 @@ func (s *KPIService) GetKPISummary(ctx context.Context, karyawanFilter string) (
 	}, nil
 }
 
-// GetOntimeLateSummary mengambil ringkasan ketepatan waktu (Soal 2).
+// GetOntimeLateSummary mengambil ringkasan ketepatan waktu dan daftar tasklist untuk Dashboard 2 (Soal 2 & 4).
 func (s *KPIService) GetOntimeLateSummary(ctx context.Context) (models.OntimeLateResponse, error) {
 	qCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -64,29 +57,16 @@ func (s *KPIService) GetOntimeLateSummary(ctx context.Context) (models.OntimeLat
 		data.PerKPI = []models.OntimeLateBreakdownKPI{}
 	}
 
+	tasks, err := s.repo.GetTasks(qCtx, "", "", "")
+	if err == nil && tasks != nil {
+		data.Tasks = tasks
+	} else {
+		data.Tasks = []models.TaskDetail{}
+	}
+
 	return models.OntimeLateResponse{
 		Status: "success",
 		Data:   data,
-	}, nil
-}
-
-// GetTasks mengambil daftar detail tasklist beserta status On-Time / Late.
-func (s *KPIService) GetTasks(ctx context.Context, karyawanFilter, kpiFilter, statusFilter string) (models.TaskListResponse, error) {
-	qCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	tasks, err := s.repo.GetTasks(qCtx, karyawanFilter, kpiFilter, statusFilter)
-	if err != nil {
-		return models.TaskListResponse{}, err
-	}
-	if tasks == nil {
-		tasks = []models.TaskDetail{}
-	}
-
-	return models.TaskListResponse{
-		Status: "success",
-		Data:   tasks,
-		Total:  len(tasks),
 	}, nil
 }
 

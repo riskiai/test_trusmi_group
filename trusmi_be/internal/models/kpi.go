@@ -1,6 +1,6 @@
 package models
 
-// KPISummaryRow merepresentasikan satu baris rekapitulasi KPI per karyawan (Soal 1 & Soal 3).
+// KPISummaryRow merepresentasikan satu baris rekapitulasi KPI per karyawan (Dashboard 1 - Soal 1 & 3).
 type KPISummaryRow struct {
 	KaryawanID       int     `json:"karyawan_id"`
 	Nama             string  `json:"nama"`
@@ -21,7 +21,7 @@ type KPISummaryRow struct {
 	TotalKPI         float64 `json:"total_kpi"`
 }
 
-// KPISummaryMeta memuat ringkasan agregat untuk summary cards pada dashboard Soal 3.
+// KPISummaryMeta memuat ringkasan agregat untuk Dashboard 1.
 type KPISummaryMeta struct {
 	TotalKaryawan   int     `json:"total_karyawan"`
 	RataRataKPI     float64 `json:"rata_rata_kpi"`
@@ -30,7 +30,7 @@ type KPISummaryMeta struct {
 	KPITerendah     float64 `json:"kpi_terendah"`
 }
 
-// KPISummaryResponse adalah payload JSON untuk GET /api/v1/kpi/summary.
+// KPISummaryResponse adalah payload JSON untuk GET /api/v1/dashboard-1.
 type KPISummaryResponse struct {
 	Status string          `json:"status"`
 	Data   []KPISummaryRow `json:"data"`
@@ -57,24 +57,7 @@ type OntimeLateBreakdownKPI struct {
 	PersentaseLate   float64 `json:"persentase_late"`
 }
 
-// OntimeLateSummary merepresentasikan hasil perhitungan Soal 2 & Soal 4.
-type OntimeLateSummary struct {
-	TotalTask        int                           `json:"total_task"`
-	TotalOntime      int                           `json:"total_ontime"`
-	TotalLate        int                           `json:"total_late"`
-	PersentaseOntime float64                       `json:"persentase_ontime"`
-	PersentaseLate   float64                       `json:"persentase_late"`
-	PerKaryawan      []OntimeLateBreakdownKaryawan `json:"per_karyawan"`
-	PerKPI           []OntimeLateBreakdownKPI      `json:"per_kpi"`
-}
-
-// OntimeLateResponse adalah payload JSON untuk GET /api/v1/kpi/ontime-late.
-type OntimeLateResponse struct {
-	Status string            `json:"status"`
-	Data   OntimeLateSummary `json:"data"`
-}
-
-// TaskDetail merepresentasikan satu baris tasklist hasil relasi tabel normalisasi (Soal 5 & Tabel Task).
+// TaskDetail merepresentasikan satu baris tasklist.
 type TaskDetail struct {
 	ID          int    `json:"id"`
 	Tasklist    string `json:"tasklist"`
@@ -86,9 +69,20 @@ type TaskDetail struct {
 	SelisihHari int    `json:"selisih_hari"`
 }
 
-// TaskListResponse adalah payload JSON untuk GET /api/v1/kpi/tasks.
-type TaskListResponse struct {
-	Status string       `json:"status"`
-	Data   []TaskDetail `json:"data"`
-	Total  int          `json:"total"`
+// OntimeLateSummary merepresentasikan hasil perhitungan Dashboard 2 (Soal 2 & 4).
+type OntimeLateSummary struct {
+	TotalTask        int                           `json:"total_task"`
+	TotalOntime      int                           `json:"total_ontime"`
+	TotalLate        int                           `json:"total_late"`
+	PersentaseOntime float64                       `json:"persentase_ontime"`
+	PersentaseLate   float64                       `json:"persentase_late"`
+	PerKaryawan      []OntimeLateBreakdownKaryawan `json:"per_karyawan"`
+	PerKPI           []OntimeLateBreakdownKPI      `json:"per_kpi"`
+	Tasks            []TaskDetail                  `json:"tasks"`
+}
+
+// OntimeLateResponse adalah payload JSON untuk GET /api/v1/dashboard-2.
+type OntimeLateResponse struct {
+	Status string            `json:"status"`
+	Data   OntimeLateSummary `json:"data"`
 }
